@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+  labels:
+    app: jenkins
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: jenkins
+  type: ClusterIP
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: jenkins-pv2
+  labels:
+    app: jenkins
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/jenkins"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-pvc
+  labels:
+    app: jenkins
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: jenkins
+  labels:
+    app: jenkins
+spec:
+  selector:
+    matchLabels:
+      app: jenkins
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - image: jenkins:latest
+        name: jenkins
+        ports:
+        - containerPort: 8080
+          name: jenkins
+        volumeMounts:
+        - name: jenkins-persistent-storage
+          mountPath: /var/jenkins_home
+      volumes:
+      - name: jenkins-persistent-storage
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+

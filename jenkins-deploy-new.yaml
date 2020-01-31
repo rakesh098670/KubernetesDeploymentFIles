@@ -1,0 +1,30 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: jenkins-new
+  labels:
+    app: jenkins
+spec:
+  selector:
+    matchLabels:
+      app: jenkins
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - image: jenkins/jenkins
+        name: jenkins
+        ports:
+        - containerPort: 8080
+          name: jenkins
+        volumeMounts:
+        - name: jenkins-persistent-storage
+          mountPath: /var/lib/jenkins/jobs
+      volumes:
+      - name: jenkins-persistent-storage
+        persistentVolumeClaim:
+          claimName: jenkins-pvc1
